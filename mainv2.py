@@ -1344,8 +1344,13 @@ if __name__ == '__main__':
     web_server_thread.start()
     
     # Run the bot
+    print("--- Diagnostic Check for DISCORD_TOKEN ---")
     token = os.environ.get("MTQwMTU0NTA1MDgzOTg0MjkxMg.GprkX2.NpV_Y2Eabw737Jvql59sjIBBoDW8f-HRcIxTWA")
     if token:
+        print(f"✅ DISCORD_TOKEN was found.")
+        print("------------------------------------------")
         bot.run(token)
     else:
         print("❌ DISCORD_TOKEN not found in environment variables. Please set it.")
+        print("------------------------------------------")
+````

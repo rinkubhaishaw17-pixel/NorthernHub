@@ -1,4 +1,3 @@
-
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
@@ -12,7 +11,23 @@ import traceback
 import asyncio
 import random
 import re
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
+# --- RENDER HEALTH CHECK SERVER ---
+# This small web server is required by Render to know that the bot is running.
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is running!")
+
+def web_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+    server.serve_forever()
+
+# --- DISCORD BOT SETUP ---
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
@@ -59,10 +74,8 @@ vouch_data = load_data("vouch_data.json")
 
 # --- GOOGLE SHEETS SETUP ---
 try:
-    # On hosting platforms, credentials might be in an environment variable.
     if "GOOGLE_CREDENTIALS_JSON" in os.environ:
         creds_json = os.environ["GOOGLE_CREDENTIALS_JSON"]
-        creds_file = io.StringIO(creds_json)
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         creds = Credentials.from_service_account_info(json.loads(creds_json), scopes=scope)
     else:
@@ -264,7 +277,7 @@ async def backup_data_task():
         if not os.path.exists(BACKUP_FOLDER):
             os.makedirs(BACKUP_FOLDER)
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         
         save_data(os.path.join(BACKUP_FOLDER, f"warnings_backup_{timestamp}.json"), warnings_data)
         save_data(os.path.join(BACKUP_FOLDER, f"auto_roles_backup_{timestamp}.json"), auto_roles_data)
@@ -509,6 +522,10 @@ class ReactionRoleButton(discord.ui.Button):
 # --- EVENTS ---
 @bot.event
 async def on_ready():
+    # Start the web server in a separate thread
+    web_server_thread = threading.Thread(target=web_server, daemon=True)
+    web_server_thread.start()
+
     print(f"✅ Logged in as {bot.user}")
     print(f"📊 Bot is in {len(bot.guilds)} guilds")
     
@@ -1320,7 +1337,14 @@ async def bot_info(interaction: discord.Interaction):
 
 # --- MAIN EXECUTION ---
 bot.stats_channels = {}
-try:
-    bot.run("MTQwMTU0NTA1MDgzOTg0MjkxMg.GprkX2.NpV_Y2Eabw737Jvql59sjIBBoDW8f-HRcIxTWA")
-except ImportError:
-    print("❌ Missing required libraries. Please install `asyncio` and `random`.")
+if __name__ == '__main__':
+    # Start the web server in a separate thread
+    web_server_thread = threading.Thread(target=web_server, daemon=True)
+    web_server_thread.start()
+    
+    # Run the bot
+    token = os.environ.get("MTQwMTU0NTA1MDgzOTg0MjkxMg.GprkX2.NpV_Y2Eabw737Jvql59sjIBBoDW8f-HRcIxTWA")
+    if token:
+        bot.run(token)
+    else:
+        print("❌ DISCORD_TOKEN not found in environment variables. Please set it.")

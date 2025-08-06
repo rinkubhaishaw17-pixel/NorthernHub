@@ -1344,9 +1344,8 @@ if __name__ == '__main__':
     web_server_thread.start()
     
     # Run the bot
-    try:
-        bot.run(os.environ["MTQwMTU0NTA1MDgzOTg0MjkxMg.GprkX2.NpV_Y2Eabw737Jvql59sjIBBoDW8f-HRcIxTWA"])
-    except KeyError:
+    token = os.environ.get("MTQwMTU0NTA1MDgzOTg0MjkxMg.GprkX2.NpV_Y2Eabw737Jvql59sjIBBoDW8f-HRcIxTWA")
+    if token:
+        bot.run(token)
+    else:
         print("❌ DISCORD_TOKEN not found in environment variables. Please set it.")
-    except Exception as e:
-        print(f"❌ An error occurred while running the bot: {e}")

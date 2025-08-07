@@ -1344,8 +1344,9 @@ if __name__ == '__main__':
     web_server_thread.start()
     
     # Run the bot
-    token = os.environ.get("MTQwMTU0NTA1MDgzOTg0MjkxMg.GprkX2.NpV_Y2Eabw737Jvql59sjIBBoDW8f-HRcIxTWA")
+    token = os.environ.get("Token_Bot")
     if token:
         bot.run(token)
     else:
         print("❌ DISCORD_TOKEN not found in environment variables. Please set it.")
+
